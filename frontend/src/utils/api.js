@@ -16,12 +16,26 @@ export async function uploadDocument(file, onProgress) {
     };
 
     xhr.onload = () => {
-      const data = JSON.parse(xhr.responseText);
+      let data;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        // Non-JSON response — usually a cold-start/timeout HTML page or a CORS
+        // failure. Surface it instead of hanging the upload promise.
+        return reject(new Error(
+          `Server returned an unexpected response (HTTP ${xhr.status}). ` +
+          `The backend may be starting up — wait a moment and try again.`
+        ));
+      }
       if (xhr.status >= 200 && xhr.status < 300) resolve(data);
-      else reject(new Error(data.error || "Upload failed"));
+      else reject(new Error(data.error || `Upload failed (HTTP ${xhr.status})`));
     };
 
-    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onerror = () => reject(new Error(
+      "Network error during upload. Check that the backend URL (VITE_API_BASE) is correct and reachable."
+    ));
+    xhr.ontimeout = () => reject(new Error("Upload timed out. The backend may be waking from sleep — try again."));
+    xhr.timeout = 120000; // 2 min — generous for free-tier cold starts
     xhr.send(form);
   });
 }
