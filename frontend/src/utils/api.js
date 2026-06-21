@@ -1,7 +1,10 @@
 // In dev, "/api" is proxied to the backend by Vite (see vite.config.js).
-// In production, set VITE_API_BASE to your deployed backend URL, e.g.
-//   VITE_API_BASE=https://your-backend.onrender.com
-const BASE = import.meta.env.VITE_API_BASE || "/api";
+// In production, talk to the deployed Render backend directly.
+// Hardcoded (not via VITE_API_BASE) so a stale Vercel dashboard env var
+// can't override it.
+const BASE = import.meta.env.DEV
+  ? "/api"
+  : "https://notebooklm-rag-implementaion.onrender.com";
 
 export async function uploadDocument(file, onProgress) {
   const form = new FormData();
