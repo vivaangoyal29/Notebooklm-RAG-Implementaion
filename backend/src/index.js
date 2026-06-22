@@ -108,8 +108,16 @@ async function judgeChunks(question, candidates) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-// Health check
-app.get("/health", (_, res) => res.json({ status: "ok" }));
+// Health check / keep-alive endpoint.
+// Point an uptime monitor (e.g. UptimeRobot) here every ~10 min so Render's
+// free tier never idles into sleep. Lightweight — no DB or LLM calls.
+app.get(["/health", "/ping"], (_, res) =>
+  res.json({
+    status: "ok",
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  })
+);
 
 // List all documents
 app.get("/documents", (_, res) => {
